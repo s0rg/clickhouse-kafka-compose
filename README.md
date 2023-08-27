@@ -6,7 +6,7 @@ Example docker-compose with clickhouse and kafka or redpanda as sources
 
 # usage
 
-Start `original kafka`-variant:
+Start original `kafka`-variant:
 
 ```shell
 make kafka-up
@@ -32,7 +32,7 @@ make redpanda-down
 make redpanda-data-down
 ```
 
-Send some data (stop it with `Ctrl-C`):
+Send some data (stop it with `C-c`):
 
 ```shell
 make produce
