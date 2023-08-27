@@ -1,0 +1,20 @@
+version: "3"
+name: clickhouse-kafka
+
+services:
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.3-alpine
+    restart: on-failure
+    depends_on:
+      - kafka
+    ports:
+      - "127.0.0.1:9000:9000"
+    volumes:
+      - click-data:/var/lib/clickhouse/
+      - ./initdb.d:/docker-entrypoint-initdb.d/:ro
+      - ./clickhouse/etc:/etc/clickhouse-server/:ro
+      - ./clickhouse/logs:/var/log/clickhouse-server/
+
+volumes:
+  click-data: null
