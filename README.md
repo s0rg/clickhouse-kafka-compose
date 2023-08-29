@@ -50,7 +50,7 @@ see: [init.sql](initdb.d/00-init.sql) for message structure details.
 
 Both variants:
 
-- `127.0.0.1:19092` - kafka broker
+- `127.0.0.1:19092` - message broker
 - `127.0.0.1:9000` - clickhouse
 
 Redpanda-only:

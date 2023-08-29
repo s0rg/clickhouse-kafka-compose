@@ -3,7 +3,7 @@ version: "3"
 services:
 
   kafka:
-    image: docker.redpanda.com/redpandadata/redpanda:v23.2.6
+    image: docker.redpanda.com/redpandadata/redpanda:v23.2.7
     restart: on-failure
     container_name: kafka
     ports:

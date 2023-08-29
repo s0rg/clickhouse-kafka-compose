@@ -4,10 +4,11 @@ import signal
 import sys
 import time
 from collections import defaultdict
-from pprint import pprint
 from random import choice, shuffle
 
-from kafka import KafkaProducer
+from kafka import KafkaAdminClient, KafkaProducer
+from kafka.admin import NewTopic
+from kafka.errors import NoBrokersAvailable, TopicAlreadyExistsError
 
 parser = argparse.ArgumentParser(
     description="json producer for clickhouse-test-lab")
@@ -27,6 +28,7 @@ def make_propabilities(**kw):
     rv = []
     for k, w in kw.items():
         rv.extend([k] * int(w))
+    shuffle(rv)
     return rv
 
 
@@ -38,7 +40,27 @@ def make_one(level):
     })
 
 
+def create_topic(broker, topic, partitions=4, replica=1):
+    adm = KafkaAdminClient(bootstrap_servers=broker)
+    try:
+        adm.create_topics([
+            NewTopic(topic, partitions, replica),
+        ])
+    except TopicAlreadyExistsError:
+        pass
+    finally:
+        adm.close()
+
+
 def main():
+    args = parser.parse_args()
+
+    try:
+        create_topic(args.broker, args.topic)
+    except NoBrokersAvailable:
+        print("[-] could not connect to broker")
+        sys.exit(1)
+
     probs = make_propabilities(
         info=8,
         warn=4,
@@ -46,24 +68,24 @@ def main():
         crit=1,
     )
 
-    shuffle(probs)
-
-    args = parser.parse_args()
-    delay = 1.0 / float(args.mps)
-    counter = defaultdict(int)
-
     producer = KafkaProducer(bootstrap_servers=args.broker, acks=1)
+    counter = defaultdict(int)
 
     def sig_handler(signum, frame):
         producer.flush()
-        pprint(dict(counter.items()), stream=sys.stderr)
+        print(dict(counter.items()), file=sys.stderr)
         sys.exit(0)
 
     signal.signal(signal.SIGINT, sig_handler)
 
+    delay = 1.0 / float(args.mps)
+
     while True:
         level = choice(probs)
-        producer.send(args.topic, make_one(level).encode('utf8'))
+        producer.send(
+            args.topic,
+            make_one(level).encode('utf8'),
+        )
         counter[level] += 1
         time.sleep(delay)
 
