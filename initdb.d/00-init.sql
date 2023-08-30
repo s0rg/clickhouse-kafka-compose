@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS event_queue (
     timestamp UInt64,
-    level     Enum('info' = 0, 'warn' = 1, 'error' = 2, 'crit' = 3),
+    level     LowCardinality(String),
     message   String
 ) ENGINE = Kafka(
     'kafka:9092',         -- broker
@@ -15,10 +15,8 @@ CREATE TABLE IF NOT EXISTS event_queue (
 
 CREATE TABLE IF NOT EXISTS daily_levels (
     day       Date,
-    level     Enum('info' = 0, 'warn' = 1, 'error' = 2, 'crit' = 3),
-    total     UInt64,
-    partition UInt64,
-    topic     String
+    level     LowCardinality(String),
+    total     UInt64
 ) ENGINE = SummingMergeTree()
 ORDER BY (day, level);
 
@@ -36,4 +34,4 @@ CREATE MATERIALIZED VIEW daily_levels_view TO daily_levels AS
     ORDER BY (day, level);
 
 -- query
--- select day, level, sum(total) from daily_levels group by (day, level);
+-- select day, level, sum(total) as total from daily_levels group by (day, level);
